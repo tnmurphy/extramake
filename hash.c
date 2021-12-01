@@ -28,6 +28,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 #define HASH_OCTETS 8
 #define HASH_STRING_SIZE 16
 
+#define UNUSED(symbol) (void)(symbol)
+
 GMK_EXPORT int plugin_is_GPL_compatible=1;
 
 /*
@@ -37,25 +39,25 @@ GMK_EXPORT int plugin_is_GPL_compatible=1;
  *
  * On error this function returns an empty string.
  */
-char default_key[] = "\x4c\xe4\x00\x24\x4c\x97\x14\xe4\x1d\x96\x2c\xce\x9f\x48\x6f\x2d";
+unsigned char default_key[] = "\x4c\xe4\x00\x24\x4c\x97\x14\xe4\x1d\x96\x2c\xce\x9f\x48\x6f\x2d";
 GMK_EXPORT char *
 func_siphash24 (const char *func_name, unsigned int argc, char **argv)
 {
-    unsigned int token_len;
-    unsigned int output_len = 0;
-    unsigned char *input = argv[0];
+    unsigned char *input = (unsigned char *)argv[0];
     unsigned char *key = default_key;
     unsigned char the_hash[HASH_OCTETS];
-    unsigned char *the_hash_string;
+    char *the_hash_string;
+
+    UNUSED(func_name);
     
     if (argc == 2) {
-        if (strlen(argv[1]) < 16) {
+        if (strlen(argv[1]) < HASH_STRING_SIZE) {
 	        return NULL;
       	    the_hash_string = gmk_alloc(1);
       	    the_hash_string[0] = '\0';
             return the_hash_string;
         }
-        key = argv[1];
+        key = (unsigned char *)argv[1];
     }
 
     the_hash[0] = 0;
@@ -67,8 +69,8 @@ func_siphash24 (const char *func_name, unsigned int argc, char **argv)
     the_hash[6] = 0;
     the_hash[7] = 0;
     the_hash_string = gmk_alloc(HASH_STRING_SIZE + 1);
-    siphash(the_hash, input, strlen(input), key);
-    sprintf(the_hash_string, 
+    siphash(the_hash, input, strlen((char *)input), key);
+    (void)snprintf(the_hash_string, HASH_STRING_SIZE + 1,
 	"%02x%02x%02x%02x%02x%02x%02x%02x",
 	the_hash[0],
 	the_hash[1],
@@ -80,7 +82,7 @@ func_siphash24 (const char *func_name, unsigned int argc, char **argv)
 	the_hash[7]
 	);
     
-    if (strlen(the_hash_string) != 16) {
+    if (strlen(the_hash_string) != HASH_STRING_SIZE) {
         return NULL;
     }
 
@@ -91,6 +93,7 @@ GMK_EXPORT
 int
 hash_gmk_setup (const gmk_floc *flocp)
 {
+    UNUSED(flocp);
     gmk_add_function ("siphash24", func_siphash24, 1, 2, GMK_FUNC_DEFAULT);
     return 1;
 }

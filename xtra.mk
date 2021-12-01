@@ -3,7 +3,7 @@
 # Linux/unix for now:
 XTRA_EXT=.so
 
-XTRA_MAKEHEADERS ?= ./include/gmake41
+XTRA_MAKEHEADERS ?= ./include/gmake421
 XTRA_OUTPUTDIR ?= .
-XTRA_CFLAGS ?= -fPIC -O2 -g 
+XTRA_CFLAGS ?= -fPIC -O2 -g -Wall -Wextra
 XTRA_SOURCE ?= .
