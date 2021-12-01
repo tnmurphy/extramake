@@ -1,0 +1,13 @@
+
+-load $(XTRA_OUTPUTDIR)/sum$(XTRA_EXT)
+
+$(XTRA_OUTPUTDIR)/sum$(XTRA_EXT): $(XTRA_OUTPUTDIR)/sum.o
+	gcc -shared -o $@ $^  
+
+$(XTRA_OUTPUTDIR)/sum.o: $(XTRA_SOURCE)/sum.c
+	gcc $(XTRA_CFLAGS) -c $^ -o $@ -I $(XTRA_MAKEHEADERS)
+
+XTRA_CLEANTARGETS:=$(XTRA_CLEANTARGETS) \
+    $(XTRA_XTRA_OUTPUTDIR)/sum$(XTRA_EXT) $(XTRA_XTRA_OUTPUTDIR)/sum.o \
+
+
