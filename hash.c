@@ -66,7 +66,6 @@ func_siphash24 (const char *func_name, unsigned int argc, char **argv)
     the_hash[5] = 0;
     the_hash[6] = 0;
     the_hash[7] = 0;
-    the_hash[8] = 0;
     the_hash_string = gmk_alloc(HASH_STRING_SIZE + 1);
     siphash(the_hash, input, strlen(input), key);
     sprintf(the_hash_string, 
@@ -78,8 +77,7 @@ func_siphash24 (const char *func_name, unsigned int argc, char **argv)
 	the_hash[4],
 	the_hash[5],
 	the_hash[6],
-	the_hash[7],
-	the_hash[8]
+	the_hash[7]
 	);
     
     if (strlen(the_hash_string) != 16) {
