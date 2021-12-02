@@ -21,14 +21,14 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gnumake.h"
 #include "siphash24.h"
 
+#include "extramake.h"
+
 /*
  Convert to signed integer and increment
 */
 
 #define HASH_OCTETS 8
 #define HASH_STRING_SIZE 16
-
-#define NOTUSED(symbol) (void)(symbol)
 
 GMK_EXPORT int plugin_is_GPL_compatible=1;
 

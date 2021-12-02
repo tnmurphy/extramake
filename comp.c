@@ -21,6 +21,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gnumake.h"
 
+#include "extramake.h"
+
 GMK_EXPORT int plugin_is_GPL_compatible=1;
 
 /*
@@ -49,8 +51,9 @@ func_comp (const char *func_name, unsigned int argc, char **argv)
     char *result = NULL;
     long long left, right, answer = 0;
 
-    char *startptr = argv[0];
     char *endptr = NULL;
+
+    NOTUSED(argc);
 
 
     left = strtoll(argv[0], &endptr, 10);
@@ -99,7 +102,7 @@ func_comp (const char *func_name, unsigned int argc, char **argv)
     }
 
     result = gmk_alloc(MAX_LENGTH_OCTETS);
-    snprintf(result, MAX_LENGTH_OCTETS - 1, "%lld", answer);
+    (void)snprintf(result, MAX_LENGTH_OCTETS - 1, "%lld", answer);
     result[MAX_LENGTH_OCTETS - 1] = '\0';
 
     return result;
@@ -109,6 +112,7 @@ GMK_EXPORT
 int
 comp_gmk_setup (const gmk_floc *flocp)
 {
+    NOTUSED(flocp);
     gmk_add_function ("gt", func_comp, 2, 2, GMK_FUNC_DEFAULT);
     gmk_add_function ("lt", func_comp, 2, 2, GMK_FUNC_DEFAULT);
     gmk_add_function ("gte", func_comp, 2, 2, GMK_FUNC_DEFAULT);

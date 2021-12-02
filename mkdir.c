@@ -24,6 +24,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gnumake.h"
 
+#include "extramake.h"
+
 /*
  Convert to signed integer and increment
 */
