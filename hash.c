@@ -28,7 +28,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 #define HASH_OCTETS 8
 #define HASH_STRING_SIZE 16
 
-#define UNUSED(symbol) (void)(symbol)
+#define NOTUSED(symbol) (void)(symbol)
 
 GMK_EXPORT int plugin_is_GPL_compatible=1;
 
@@ -48,7 +48,7 @@ func_siphash24 (const char *func_name, unsigned int argc, char **argv)
     unsigned char the_hash[HASH_OCTETS];
     char *the_hash_string;
 
-    UNUSED(func_name);
+    NOTUSED(func_name);
     
     if (argc == 2) {
         if (strlen(argv[1]) < HASH_STRING_SIZE) {
@@ -93,7 +93,7 @@ GMK_EXPORT
 int
 hash_gmk_setup (const gmk_floc *flocp)
 {
-    UNUSED(flocp);
+    NOTUSED(flocp);
     gmk_add_function ("siphash24", func_siphash24, 1, 2, GMK_FUNC_DEFAULT);
     return 1;
 }
