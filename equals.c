@@ -20,6 +20,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gnumake.h"
 
+#include "extramake.h"
+
 /*
  Convert to signed integer and increment
 */
@@ -39,7 +41,9 @@ GMK_EXPORT char *
 func_equals (const char *func_name, unsigned int argc, char **argv)
 {
     char *result = NULL;
-    const char *if_ = NULL;
+
+    NOTUSED(func_name);
+    NOTUSED(argc);
 
     if (strcmp(argv[0], argv[1]) == 0) {
         result = gmk_alloc(strlen(argv[0]) + 1);
@@ -58,6 +62,7 @@ GMK_EXPORT
 int
 equals_gmk_setup (const gmk_floc *flocp)
 {
+    NOTUSED(flocp);
     gmk_add_function ("equals", func_equals, 2, 2, GMK_FUNC_DEFAULT);
     return 1;
 }

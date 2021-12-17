@@ -20,6 +20,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gnumake.h"
 
+#include "extramake.h"
+
 /*
  Convert to signed integer and increment
 */
@@ -46,10 +48,13 @@ func_strlen (const char *func_name, unsigned int argc, char **argv)
     char *result = NULL;
     unsigned long long len;
 
+    NOTUSED(func_name);
+    NOTUSED(argc);
+
     len = strlen(argv[0]);
 
     result = gmk_alloc(MAX_LENGTH_OCTETS);
-    snprintf(result, MAX_LENGTH_OCTETS - 1, "%llu", len);
+    (void)snprintf(result, MAX_LENGTH_OCTETS - 1, "%llu", len);
     result[MAX_LENGTH_OCTETS - 1] = '\0';
 
     return result;
@@ -59,6 +64,7 @@ GMK_EXPORT
 int
 strlen_gmk_setup (const gmk_floc *flocp)
 {
+    NOTUSED(flocp);
     gmk_add_function ("strlen", func_strlen, 1, 1, GMK_FUNC_DEFAULT);
     return 1;
 }

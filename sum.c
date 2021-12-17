@@ -21,6 +21,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gnumake.h"
 
+#include "extramake.h"
+
 GMK_EXPORT int plugin_is_GPL_compatible=1;
 
 /*
@@ -47,6 +49,9 @@ func_sum (const char *func_name, unsigned int argc, char **argv)
     char *startptr = argv[0];
     char *endptr;
 
+    NOTUSED(func_name);
+    NOTUSED(argc);
+
     while (*startptr != '\0') {
         while (*startptr == ' ' || *startptr == '\t') {
             startptr ++;
@@ -62,7 +67,7 @@ func_sum (const char *func_name, unsigned int argc, char **argv)
     }
 
     result = gmk_alloc(MAX_LENGTH_OCTETS);
-    snprintf(result, MAX_LENGTH_OCTETS - 1, "%lld", sum);
+    (void)snprintf(result, MAX_LENGTH_OCTETS - 1, "%lld", sum);
     result[MAX_LENGTH_OCTETS - 1] = '\0';
 
     return result;
@@ -72,6 +77,7 @@ GMK_EXPORT
 int
 sum_gmk_setup (const gmk_floc *flocp)
 {
+    NOTUSED(flocp);
     gmk_add_function ("sum", func_sum, 1, 1, GMK_FUNC_DEFAULT);
     return 1;
 }
