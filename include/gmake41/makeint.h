@@ -1,5 +1,5 @@
 /* Miscellaneous global declarations and portability cruft for GNU Make.
-Copyright (C) 1988-2014 Free Software Foundation, Inc.
+Copyright (C) 1988-2022 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -12,7 +12,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.  */
+this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* We use <config.h> instead of "config.h" so that a compilation
    using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h
@@ -41,6 +41,21 @@ char *alloca ();
 # endif
 #endif
 
+/* Some versions of GCC (e.g., 10.x) set the warn_unused_result attribute on
+   __builtin_alloca.  This causes alloca(0) to fail and is not easily worked
+   around so avoid it via the preprocessor.
+   See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98055  */
+
+#if defined (__has_builtin)
+# if __has_builtin (__builtin_alloca)
+#   define free_alloca()
+# else
+#  define free_alloca() alloca (0)
+# endif
+#else
+# define free_alloca() alloca (0)
+#endif
+
 /* Disable assert() unless we're a maintainer.
    Some asserts are compute-intensive.  */
 #ifndef MAKE_MAINTAINER_MODE
@@ -67,6 +82,7 @@ char *alloca ();
 # define __NO_STRING_INLINES
 #endif
 
+#include <stddef.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
@@ -78,25 +94,15 @@ char *alloca ();
    unless <sys/timeb.h> has been included first.  */
 # include <sys/timeb.h>
 #endif
-#if TIME_WITH_SYS_TIME
+#if HAVE_SYS_TIME_H
 # include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
 #endif
+#include <time.h>
 
 #include <errno.h>
 
 #ifndef errno
 extern int errno;
-#endif
-
-#ifndef isblank
-# define isblank(c)     ((c) == ' ' || (c) == '\t')
 #endif
 
 #ifdef __VMS
@@ -118,16 +124,12 @@ extern int errno;
 #endif
 
 /* Some systems define _POSIX_VERSION but are not really POSIX.1.  */
-#if (defined (butterfly) || defined (__arm) || (defined (__mips) && defined (_SYSTYPE_SVR3)) || (defined (sequent) && defined (i386)))
+#if (defined (butterfly) || (defined (__mips) && defined (_SYSTYPE_SVR3)) || (defined (sequent) && defined (i386)))
 # undef POSIX
 #endif
 
 #if !defined (POSIX) && defined (_AIX) && defined (_POSIX_SOURCE)
 # define POSIX 1
-#endif
-
-#ifndef RETSIGTYPE
-# define RETSIGTYPE     void
 #endif
 
 #ifndef sigmask
@@ -138,6 +140,10 @@ extern int errno;
 # define SA_RESTART 0
 #endif
 
+#ifdef HAVE_VFORK_H
+# include <vfork.h>
+#endif
+
 #ifdef  HAVE_LIMITS_H
 # include <limits.h>
 #endif
@@ -146,21 +152,22 @@ extern int errno;
 #endif
 
 #ifndef PATH_MAX
-# ifndef POSIX
+# ifdef MAXPATHLEN
 #  define PATH_MAX      MAXPATHLEN
+# else
+/* Some systems (HURD) have fully dynamic pathnames with no maximum.
+   Ideally we'd support this but it will take some work.  */
+#  define PATH_MAX      4096
 # endif
-#endif
-#ifndef MAXPATHLEN
-# define MAXPATHLEN 1024
 #endif
 
 #ifdef  PATH_MAX
 # define GET_PATH_MAX   PATH_MAX
-# define PATH_VAR(var)  char var[PATH_MAX]
+# define PATH_VAR(var)  char var[PATH_MAX+1]
 #else
 # define NEED_GET_PATH_MAX 1
 # define GET_PATH_MAX   (get_path_max ())
-# define PATH_VAR(var)  char *var = alloca (GET_PATH_MAX)
+# define PATH_VAR(var)  char *var = alloca (GET_PATH_MAX+1)
 unsigned int get_path_max (void);
 #endif
 
@@ -219,19 +226,22 @@ extern int vms_legacy_behavior;
 extern int vms_unix_simulation;
 #endif
 
-#ifndef __attribute__
-/* This feature is available in gcc versions 2.5 and later.  */
-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || __STRICT_ANSI__
-#  define __attribute__(x)
-# endif
+#if !defined(__attribute__) && (__GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || __STRICT_ANSI__)
+/* Don't use __attribute__ if it's not supported.  */
+# define ATTRIBUTE(x)
+#else
+# define ATTRIBUTE(x) __attribute__ (x)
+#endif
+
 /* The __-protected variants of 'format' and 'printf' attributes
    are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
-#  define __format__ format
-#  define __printf__ printf
-# endif
+#if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
+# define __format__ format
+# define __printf__ printf
 #endif
-#define UNUSED  __attribute__ ((unused))
+
+#define UNUSED   ATTRIBUTE ((unused))
+#define NORETURN ATTRIBUTE ((noreturn))
 
 #if defined (STDC_HEADERS) || defined (__GNU_LIBRARY__)
 # include <stdlib.h>
@@ -254,8 +264,8 @@ void *malloc (int);
 void *realloc (void *, int);
 void free (void *);
 
-void abort (void) __attribute__ ((noreturn));
-void exit (int) __attribute__ ((noreturn));
+void abort (void) NORETURN;
+void exit (int) NORETURN;
 # endif /* HAVE_STDLIB_H.  */
 
 #endif /* Standard headers.  */
@@ -285,10 +295,30 @@ char *strerror (int errnum);
 #if HAVE_STDINT_H
 # include <stdint.h>
 #endif
+
+#if defined _MSC_VER || defined __MINGW32__
+# define MK_PRI64_PREFIX "I64"
+#else
+# define MK_PRI64_PREFIX "ll"
+#endif
+#ifndef PRIdMAX
+# define PRIdMAX MK_PRI64_PREFIX "d"
+#endif
+#ifndef PRIuMAX
+# define PRIuMAX MK_PRI64_PREFIX "u"
+#endif
+#ifndef SCNdMAX
+# define SCNdMAX PRIdMAX
+#endif
 #define FILE_TIMESTAMP uintmax_t
 
 #if !defined(HAVE_STRSIGNAL)
 char *strsignal (int signum);
+#endif
+
+#if !defined(HAVE_UMASK)
+typedef int mode_t;
+extern mode_t umask (mode_t);
 #endif
 
 /* ISDIGIT offers the following features:
@@ -321,7 +351,7 @@ char *strsignal (int signum);
 
 #define strneq(a, b, l) (strncmp ((a), (b), (l)) == 0)
 
-#if defined(__GNUC__) || defined(ENUM_BITFIELDS)
+#if defined(ENUM_BITFIELDS) || (defined(__GNUC__) && !defined(__STRICT_ANSI__))
 # define ENUM_BITFIELD(bits)    :bits
 #else
 # define ENUM_BITFIELD(bits)
@@ -340,21 +370,6 @@ char *strsignal (int signum);
 #define _(msgid)            gettext (msgid)
 #define N_(msgid)           gettext_noop (msgid)
 #define S_(msg1,msg2,num)   ngettext (msg1,msg2,num)
-
-/* Handle other OSs.
-   To overcome an issue parsing paths in a DOS/Windows environment when
-   built in a unix based environment, override the PATH_SEPARATOR_CHAR
-   definition unless being built for Cygwin. */
-#if defined(HAVE_DOS_PATHS) && !defined(__CYGWIN__)
-# undef PATH_SEPARATOR_CHAR
-# define PATH_SEPARATOR_CHAR ';'
-#elif !defined(PATH_SEPARATOR_CHAR)
-# if defined (VMS)
-#  define PATH_SEPARATOR_CHAR (vms_comma_separator ? ',' : ':')
-# else
-#  define PATH_SEPARATOR_CHAR ':'
-# endif
-#endif
 
 /* This is needed for getcwd() and chdir(), on some W32 systems.  */
 #if defined(HAVE_DIRECT_H)
@@ -391,20 +406,22 @@ extern int unixy_shell;
 # endif
 
 /* Include only the minimal stuff from windows.h.   */
-#define WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
 #endif  /* WINDOWS32 */
 
+/* ALL_SET() evaluates the second argument twice.  */
 #define ANY_SET(_v,_m)  (((_v)&(_m)) != 0)
 #define NONE_SET(_v,_m) (! ANY_SET ((_v),(_m)))
+#define ALL_SET(_v,_m)  (((_v)&(_m)) == (_m))
 
 #define MAP_NUL         0x0001
-#define MAP_BLANK       0x0002
-#define MAP_SPACE       0x0004
+#define MAP_BLANK       0x0002  /* space, TAB */
+#define MAP_NEWLINE     0x0004
 #define MAP_COMMENT     0x0008
 #define MAP_SEMI        0x0010
 #define MAP_EQUALS      0x0020
 #define MAP_COLON       0x0040
-#define MAP_PERCENT     0x0080
+#define MAP_VARSEP      0x0080
 #define MAP_PIPE        0x0100
 #define MAP_DOT         0x0200
 #define MAP_COMMA       0x0400
@@ -422,9 +439,49 @@ extern int unixy_shell;
 # define MAP_VMSCOMMA   0x0000
 #endif
 
-#define STOP_SET(_v,_m) ANY_SET (stopchar_map[(unsigned char)(_v)],(_m))
+#define MAP_SPACE       (MAP_BLANK|MAP_NEWLINE)
 
-#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT) && defined(HAVE_SETRLIMIT)
+/* Handle other OSs.
+   To overcome an issue parsing paths in a DOS/Windows environment when
+   built in a unix based environment, override the PATH_SEPARATOR_CHAR
+   definition unless being built for Cygwin. */
+#if defined(HAVE_DOS_PATHS) && !defined(__CYGWIN__)
+# undef PATH_SEPARATOR_CHAR
+# define PATH_SEPARATOR_CHAR ';'
+# define MAP_PATHSEP    MAP_SEMI
+#elif !defined(PATH_SEPARATOR_CHAR)
+# if defined (VMS)
+#  define PATH_SEPARATOR_CHAR (vms_comma_separator ? ',' : ':')
+#  define MAP_PATHSEP    (vms_comma_separator ? MAP_COMMA : MAP_SEMI)
+# else
+#  define PATH_SEPARATOR_CHAR ':'
+#  define MAP_PATHSEP    MAP_COLON
+# endif
+#elif PATH_SEPARATOR_CHAR == ':'
+# define MAP_PATHSEP     MAP_COLON
+#elif PATH_SEPARATOR_CHAR == ';'
+# define MAP_PATHSEP     MAP_SEMI
+#elif PATH_SEPARATOR_CHAR == ','
+# define MAP_PATHSEP     MAP_COMMA
+#else
+# error "Unknown PATH_SEPARATOR_CHAR"
+#endif
+
+#define STOP_SET(_v,_m) ANY_SET(stopchar_map[(unsigned char)(_v)],(_m))
+
+/* True if C is a directory separator on the current system.  */
+#define ISDIRSEP(c)     STOP_SET((c),MAP_DIRSEP)
+/* True if C is whitespace but not newline.  */
+#define ISBLANK(c)      STOP_SET((c),MAP_BLANK)
+/* True if C is whitespace including newlines.  */
+#define ISSPACE(c)      STOP_SET((c),MAP_SPACE)
+/* True if C is nul or whitespace (including newline).  */
+#define END_OF_TOKEN(c) STOP_SET((c),MAP_SPACE|MAP_NUL)
+/* Move S past all whitespace (including newlines).  */
+#define NEXT_TOKEN(s)   while (ISSPACE (*(s))) ++(s)
+
+/* We can't run setrlimit when using posix_spawn.  */
+#if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT) && defined(HAVE_SETRLIMIT) && !defined(USE_POSIX_SPAWN)
 # define SET_STACK_SIZE
 #endif
 #ifdef SET_STACK_SIZE
@@ -432,13 +489,21 @@ extern int unixy_shell;
 extern struct rlimit stack_limit;
 #endif
 
-#define NILF ((gmk_floc *)0)
+#include <glob.h>
 
+#define NILF ((floc *)0)
+
+/* Number of characters in a string constant.  Does NOT include the \0 byte.  */
 #define CSTRLEN(_s)           (sizeof (_s)-1)
+
+/* Only usable when NOT calling a macro: only use it for local functions.  */
 #define STRING_SIZE_TUPLE(_s) (_s), CSTRLEN(_s)
 
-/* The number of bytes needed to represent the largest integer as a string.  */
-#define INTSTR_LENGTH         CSTRLEN ("18446744073709551616")
+/* The number of bytes needed to represent the largest signed and unsigned
+   integers as a string.
+   Does NOT include space for \0 so be sure to add it if needed.
+   Math suggested by Edward Welbourne <edward.welbourne@qt.io>  */
+#define INTSTR_LENGTH   (53 * sizeof(uintmax_t) / 22 + 3)
 
 #define DEFAULT_TTYNAME "true"
 #ifdef HAVE_TTYNAME
@@ -447,15 +512,38 @@ extern struct rlimit stack_limit;
 # define TTYNAME(_f) DEFAULT_TTYNAME
 #endif
 
+#ifdef VMS
+# define DEFAULT_TMPDIR     "/sys$scratch/"
+#elif defined(P_tmpdir)
+# define DEFAULT_TMPDIR     P_tmpdir
+#else
+# define DEFAULT_TMPDIR     "/tmp"
+#endif
+
+
 
+
+struct file;
+
+/* Specify the location of elements read from makefiles.  */
+typedef struct
+  {
+    const char *filenm;
+    unsigned long lineno;
+    unsigned long offset;
+  } floc;
+
 const char *concat (unsigned int, ...);
 void message (int prefix, size_t length, const char *fmt, ...)
-              __attribute__ ((__format__ (__printf__, 3, 4)));
-void error (const gmk_floc *flocp, size_t length, const char *fmt, ...)
-            __attribute__ ((__format__ (__printf__, 3, 4)));
-void fatal (const gmk_floc *flocp, size_t length, const char *fmt, ...)
-                   __attribute__ ((noreturn, __format__ (__printf__, 3, 4)));
+              ATTRIBUTE ((__format__ (__printf__, 3, 4)));
+void error (const floc *flocp, size_t length, const char *fmt, ...)
+            ATTRIBUTE ((__format__ (__printf__, 3, 4)));
+void fatal (const floc *flocp, size_t length, const char *fmt, ...)
+            ATTRIBUTE ((noreturn, __format__ (__printf__, 3, 4)));
+void out_of_memory (void) NORETURN;
 
+/* When adding macros to this list be sure to update the value of
+   XGETTEXT_OPTIONS in the po/Makevars file.  */
 #define O(_t,_a,_f)           _t((_a), 0, (_f))
 #define OS(_t,_a,_f,_s)       _t((_a), strlen (_s), (_f), (_s))
 #define OSS(_t,_a,_f,_s1,_s2) _t((_a), strlen (_s1) + strlen (_s2), \
@@ -470,18 +558,24 @@ void fatal (const gmk_floc *flocp, size_t length, const char *fmt, ...)
 #define ONS(_t,_a,_f,_n,_s)   _t((_a), INTSTR_LENGTH + strlen (_s), \
                                  (_f), (_n), (_s))
 
-#define OUT_OF_MEM() O (fatal, NILF, _("virtual memory exhausted"))
-
-void die (int) __attribute__ ((noreturn));
-void pfatal_with_name (const char *) __attribute__ ((noreturn));
+void decode_env_switches (const char*, size_t line);
+void temp_stdin_unlink (void);
+void die (int) NORETURN;
+void pfatal_with_name (const char *) NORETURN;
 void perror_with_name (const char *, const char *);
 #define xstrlen(_s) ((_s)==NULL ? 0 : strlen (_s))
-void *xmalloc (unsigned int);
-void *xcalloc (unsigned int);
-void *xrealloc (void *, unsigned int);
+unsigned int make_toui (const char*, const char**);
+char *make_lltoa (long long, char *);
+char *make_ulltoa (unsigned long long, char *);
+void make_seed (unsigned int);
+unsigned int make_rand (void);
+pid_t make_pid (void);
+void *xmalloc (size_t);
+void *xcalloc (size_t);
+void *xrealloc (void *, size_t);
 char *xstrdup (const char *);
-char *xstrndup (const char *, unsigned int);
-char *find_next_token (const char **, unsigned int *);
+char *xstrndup (const char *, size_t);
+char *find_next_token (const char **, size_t *);
 char *next_token (const char *);
 char *end_of_token (const char *);
 void collapse_continuations (char *);
@@ -490,6 +584,15 @@ int alpha_compare (const void *, const void *);
 void print_spaces (unsigned int);
 char *find_percent (char *);
 const char *find_percent_cached (const char **);
+const char *get_tmpdir (void);
+int get_tmpfd (char **);
+FILE *get_tmpfile (char **);
+ssize_t writebuf (int, const void *, size_t);
+ssize_t readbuf (int, void *, size_t);
+
+#ifndef HAVE_MEMRCHR
+void *memrchr(const void *, int, size_t);
+#endif
 
 #ifndef NO_ARCHIVES
 int ar_name (const char *);
@@ -497,12 +600,14 @@ void ar_parse_name (const char *, char **, char **);
 int ar_touch (const char *);
 time_t ar_member_date (const char *);
 
-typedef long int (*ar_member_func_t) (int desc, const char *mem, int truncated,
+typedef intmax_t (*ar_member_func_t) (int desc, const char *mem, int truncated,
                                       long int hdrpos, long int datapos,
-                                      long int size, long int date, int uid,
-                                      int gid, int mode, const void *arg);
+                                      long int size, intmax_t date, int uid,
+                                      int gid, unsigned int mode,
+                                      const void *arg);
 
-long int ar_scan (const char *archive, ar_member_func_t function, const void *arg);
+intmax_t ar_scan (const char *archive, ar_member_func_t function,
+                  const void *arg);
 int ar_name_equal (const char *name, const char *mem, int truncated);
 #ifndef VMS
 int ar_member_touch (const char *arname, const char *memname);
@@ -514,6 +619,8 @@ int file_exists_p (const char *);
 int file_impossible_p (const char *);
 void file_impossible (const char *);
 const char *dir_name (const char *);
+void print_dir_data_base (void);
+void dir_setup_glob (glob_t *);
 void hash_init_directories (void);
 
 void define_default_variables (void);
@@ -526,51 +633,60 @@ void build_vpath_lists (void);
 void construct_vpath_list (char *pattern, char *dirpath);
 const char *vpath_search (const char *file, FILE_TIMESTAMP *mtime_ptr,
                           unsigned int* vpath_index, unsigned int* path_index);
-int gpath_search (const char *file, unsigned int len);
+int gpath_search (const char *file, size_t len);
 
 void construct_include_path (const char **arg_dirs);
 
-void user_access (void);
-void make_access (void);
-void child_access (void);
-
 char *strip_whitespace (const char **begpp, const char **endpp);
+
+void show_goal_error (void);
 
 /* String caching  */
 void strcache_init (void);
 void strcache_print_stats (const char *prefix);
 int strcache_iscached (const char *str);
 const char *strcache_add (const char *str);
-const char *strcache_add_len (const char *str, unsigned int len);
+const char *strcache_add_len (const char *str, size_t len);
 
 /* Guile support  */
-int guile_gmake_setup (const gmk_floc *flocp);
+int guile_gmake_setup (const floc *flocp);
 
 /* Loadable object support.  Sets to the strcached name of the loaded file.  */
-typedef int (*load_func_t)(const gmk_floc *flocp);
-int load_file (const gmk_floc *flocp, const char **filename, int noerror);
-void unload_file (const char *name);
+typedef int (*load_func_t)(const floc *flocp);
+int load_file (const floc *flocp, struct file *file, int noerror);
+int unload_file (const char *name);
+
+/* Maintainer mode support */
+#ifdef MAKE_MAINTAINER_MODE
+# define SPIN(_s) spin (_s)
+void spin (const char* suffix);
+# define DBG(_f) dbg _f
+void dbg (const char *fmt, ...);
+#else
+# define SPIN(_s)
+/* Never put this code into Git or a release.  */
+# define DBG(_f) compile-error
+#endif
 
 /* We omit these declarations on non-POSIX systems which define _POSIX_VERSION,
    because such systems often declare them in header files anyway.  */
 
 #if !defined (__GNU_LIBRARY__) && !defined (POSIX) && !defined (_POSIX_VERSION) && !defined(WINDOWS32)
 
-long int atol ();
 # ifndef VMS
 long int lseek ();
 # endif
 
-#endif  /* Not GNU C library or POSIX.  */
-
-#ifdef  HAVE_GETCWD
-# if !defined(VMS) && !defined(__DECC)
-char *getcwd ();
+# ifdef  HAVE_GETCWD
+#  if !defined(VMS) && !defined(__DECC)
+char *getcwd (void);
+#  endif
+# else
+char *getwd (void);
+#  define getcwd(buf, len)       getwd (buf)
 # endif
-#else
-char *getwd ();
-# define getcwd(buf, len)       getwd (buf)
-#endif
+
+#endif  /* Not GNU C library or POSIX.  */
 
 #if !HAVE_STRCASECMP
 # if HAVE_STRICMP
@@ -590,8 +706,18 @@ int strcasecmp (const char *s1, const char *s2);
 #  define strncasecmp strncmpi
 # else
 /* Create our own, in misc.c */
-int strncasecmp (const char *s1, const char *s2, int n);
+int strncasecmp (const char *s1, const char *s2, size_t n);
 # endif
+#endif
+
+#if !HAVE_MEMPCPY
+/* Create our own, in misc.c */
+void *mempcpy (void *dest, const void *src, size_t n);
+#endif
+
+#if !HAVE_STPCPY
+/* Create our own, in misc.c */
+char *stpcpy (char *dest, const char *src);
 #endif
 
 #define OUTPUT_SYNC_NONE    0
@@ -599,43 +725,43 @@ int strncasecmp (const char *s1, const char *s2, int n);
 #define OUTPUT_SYNC_TARGET  2
 #define OUTPUT_SYNC_RECURSE 3
 
-extern const gmk_floc *reading_file;
-extern const gmk_floc **expanding_var;
-
+/* Non-GNU systems may not declare this in unistd.h.  */
 extern char **environ;
+
+extern const floc *reading_file;
+extern const floc **expanding_var;
 
 extern unsigned short stopchar_map[];
 
-extern int just_print_flag, silent_flag, ignore_errors_flag, keep_going_flag;
+extern int just_print_flag, run_silent, ignore_errors_flag, keep_going_flag;
 extern int print_data_base_flag, question_flag, touch_flag, always_make_flag;
 extern int env_overrides, no_builtin_rules_flag, no_builtin_variables_flag;
-extern int print_version_flag, print_directory_flag, check_symlink_flag;
-extern int warn_undefined_variables_flag, trace_flag, posix_pedantic;
+extern int print_version_flag, print_directory, check_symlink_flag;
+extern int warn_undefined_variables_flag, posix_pedantic;
 extern int not_parallel, second_expansion, clock_skew_detected;
 extern int rebuilding_makefiles, one_shell, output_sync, verify_flag;
+extern unsigned long command_count;
+
+extern const char *default_shell;
 
 /* can we run commands via 'sh -c xxx' or must we use batch files? */
 extern int batch_mode_shell;
 
+#define GNUMAKEFLAGS_NAME       "GNUMAKEFLAGS"
+#define MAKEFLAGS_NAME          "MAKEFLAGS"
+
 /* Resetting the command script introduction prefix character.  */
-#define RECIPEPREFIX_NAME          ".RECIPEPREFIX"
-#define RECIPEPREFIX_DEFAULT       '\t'
+#define RECIPEPREFIX_NAME       ".RECIPEPREFIX"
+#define RECIPEPREFIX_DEFAULT    '\t'
 extern char cmd_prefix;
 
-extern unsigned int job_slots;
-extern int job_fds[2];
-extern int job_rfd;
-#ifndef NO_FLOAT
-extern double max_load_average;
-#else
-extern int max_load_average;
-#endif
+#define JOBSERVER_AUTH_OPT      "jobserver-auth"
 
-#ifdef WINDOWS32
-extern char *program;
-#else
+extern char *jobserver_auth;
+extern unsigned int job_slots;
+extern double max_load_average;
+
 extern const char *program;
-#endif
 
 #ifdef VMS
 const char *vms_command (const char *argv0);
@@ -667,14 +793,24 @@ vms_restore_symbol (const char *string);
 
 #endif
 
+void remote_setup (void);
+void remote_cleanup (void);
+int start_remote_job_p (int);
+int start_remote_job (char **, char **, int, int *, pid_t *, int *);
+int remote_status (int *, int *, int *, int);
+void block_remote_children (void);
+void unblock_remote_children (void);
+int remote_kill (pid_t id, int sig);
+void print_variable_data_base (void);
+void print_vpath_data_base (void);
+
 extern char *starting_directory;
 extern unsigned int makelevel;
 extern char *version_string, *remote_description, *make_host;
 
 extern unsigned int commands_started;
 
-extern int handling_fatal_signal;
-
+extern volatile sig_atomic_t handling_fatal_signal;
 
 #ifndef MIN
 #define MIN(_a,_b) ((_a)<(_b)?(_a):(_b))
@@ -682,7 +818,6 @@ extern int handling_fatal_signal;
 #ifndef MAX
 #define MAX(_a,_b) ((_a)>(_b)?(_a):(_b))
 #endif
-
 
 #define MAKE_SUCCESS 0
 #define MAKE_TROUBLE 1

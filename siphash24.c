@@ -111,16 +111,22 @@ int siphash(uint8_t *out, const uint8_t *in, uint64_t inlen, const uint8_t *k) {
   switch (left) {
   case 7:
     b |= ((uint64_t)in[6]) << 48;
+    break;
   case 6:
     b |= ((uint64_t)in[5]) << 40;
+    break;
   case 5:
     b |= ((uint64_t)in[4]) << 32;
+    break;
   case 4:
     b |= ((uint64_t)in[3]) << 24;
+    break;
   case 3:
     b |= ((uint64_t)in[2]) << 16;
+    break;
   case 2:
     b |= ((uint64_t)in[1]) << 8;
+    break;
   case 1:
     b |= ((uint64_t)in[0]);
     break;

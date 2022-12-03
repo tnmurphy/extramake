@@ -14,32 +14,42 @@ so it shouldn't be too hard to get them working on Windows.
  
 Example makefiles are included to show how to use each extension.
 
-
-e.g
+e.g.
 
 ```
+# Generate a program with a version number that is based on
+# the list of source files - so if you add or remove a 
+# source file then the library will be rebuilt.  This makes
+# use of the siphash24 module to generate a short unique string
+# based on the list of files
+
 SOURCES:=proga.c progb.c
 OBJECTS:=$(SOURCES:.c=.o)
+
 
 include ../xtra.mk
 XTRA_OUTPUTDIR:=.
 XTRA_SOURCE:=..
 -load $(XTRA_OUTPUTDIR)/hash$(XTRA_EXT)
 
-# The output filename will depend on which source files were used
-# This may be handy in incremental build situations where a library might
-# appear up to date even if one of its source files has been removed from
-# the makefile.
 LIBVERSION:=$(siphash24 $(SOURCES))
-LIBNAME:=prog_$(LIBVERSION).so
+LIBNAME:=prog.$(LIBVERSION).so
+LIBSHORTNAME:=prog.so
 
 $(LIBNAME): $(OBJECTS)
 	cc -o $@ $^ -shared
+	ln -sf $@ $(LIBSHORTNAME)
 
 $(OBJECTS) : %.o : %.c 
 	cc -c -o $@ -fPIC $^
 
 include ../hash.mk
+
+clean:
+	rm $(OBJECTS) $(LIBNAME) $(LIBSHORTNAME)
+
+
+
 ```
 
 ## Functions ##
