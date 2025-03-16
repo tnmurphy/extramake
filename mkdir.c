@@ -54,21 +54,25 @@ GMK_EXPORT int plugin_is_GPL_compatible=1;
  */
 #define PATH_SEPARATOR '/'
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 GMK_EXPORT char *
 func_mkdir (const char *func_name, unsigned int argc, char **argv)
 {
-    char *result = NULL;
+#pragma GCC diagnostic pop
     unsigned long long len;
 
     len = strlen(argv[0]);
     char *modifiable = gmk_alloc(len + 1);
-    strcpy(modifyable, argv[0]);
+    strcpy(modifiable, argv[0]);
 
     char *end = NULL;
     char *start = modifiable;
+    mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+
 
     if (*start != '\0') {
-        if (mkdir(modifiable) == -1) {
+        if (mkdir(modifiable, mode) == -1) {
             if (errno == EEXIST) {
                 return modifiable;
             }
@@ -79,7 +83,7 @@ func_mkdir (const char *func_name, unsigned int argc, char **argv)
                     end = strchr(start, PATH_SEPARATOR);
                     if (end) {
                         *end = '\0';
-                        mkdir(modifiable);
+                        mkdir(modifiable, mode);
                         *end = PATH_SEPARATOR;
                         start = modifiable + 1;
                     } else {
@@ -99,10 +103,14 @@ func_mkdir (const char *func_name, unsigned int argc, char **argv)
     return modifiable;
 }
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 GMK_EXPORT
 int
-strlen_gmk_setup (const gmk_floc *flocp)
+mkdir_gmk_setup (const gmk_floc *flocp)
 {
-    gmk_add_function ("strlen", func_strlen, 1, 1, GMK_FUNC_DEFAULT);
+#pragma GCC diagnostic pop
+    gmk_add_function ("mkdir", func_mkdir, 1, 1, GMK_FUNC_DEFAULT);
     return 1;
 }

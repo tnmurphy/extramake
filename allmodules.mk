@@ -6,3 +6,4 @@ include strlen.mk
 include sum.mk
 include mul.mk
 include comp.mk
+include mkdir.mk
