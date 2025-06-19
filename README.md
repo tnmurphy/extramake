@@ -31,7 +31,7 @@ that add functions for a wide variety of purposes.
 * $(lte x,y) returns 1 if x <= y for integers x and y, empty string otherwise.
 * $(gt x,y) returns 1 if x >= y for integers x and y, empty string otherwise.
 * $(gte x,y) returns 1 if x >= y for integers x and y, empty string otherwise.
-* $(mkdir /path/to/dir)  makes all directories up to and including "dir". Returns as much of the path as coudl be made or empty if no path could be made e.g. if the root doesn't exist.
+* $(mkdir /path/to/dir)  makes all directories up to and including "dir". Returns as much of the path as could be made or empty if no path could be made e.g. if the root doesn't exist.
 
 
 ## How to use the modules ##
