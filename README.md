@@ -32,6 +32,8 @@ that add functions for a wide variety of purposes.
 * $(gt x,y) returns 1 if x >= y for integers x and y, empty string otherwise.
 * $(gte x,y) returns 1 if x >= y for integers x and y, empty string otherwise.
 * $(mkdir /path/to/dir)  makes all directories up to and including "dir". Returns as much of the path as could be made or empty if no path could be made e.g. if the root doesn't exist.
+* $(reverse <list>) returns the list in reverse order with single space separator. 
+  * e.g. $(reverse ab cd ef) returns ef cd ab
 
 
 ## How to use the modules ##

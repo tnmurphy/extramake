@@ -6,4 +6,5 @@ include mul.mk
 include comp.mk
 include mkdir.mk
 include regex.mk
+include reverse.mk
 
