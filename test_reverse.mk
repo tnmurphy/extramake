@@ -8,6 +8,6 @@ $(eval $(call simpletest,reverse_tokens_longer_than_one,ef cd ab,$(reverse ab cd
 $(eval $(call simpletest,reverse_empty,,$(reverse)))
 $(eval $(call simpletest,reverse_1whitespace,,$(reverse )))
 $(eval $(call simpletest,reverse_2whitespace,,$(reverse  )))
-$(eval $(call simpletest,reverse_excess_whitespace,ijk efgh abcd,$(reverse abcd       efgh ijk)))
+$(eval $(call simpletest,reverse_excess_whitespace_middle,ijk efgh abcd,$(reverse abcd       efgh ijk)))
 $(eval $(call simpletest,reverse_excess_whitespace_end,ijk efgh abcd,$(reverse abcd       efgh ijk     )))
-$(eval $(call simpletest,reverse_excess_whitespace_start,  ijk efgh abcd,$(reverse abcd       efgh ijk)))
+$(eval $(call simpletest,reverse_excess_whitespace_start,ijk efgh abcd,$(reverse     abcd       efgh ijk)))

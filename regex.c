@@ -101,8 +101,9 @@ func_regcomp (const char *func_name, unsigned int argc, char **argv)
     compresult = regcomp(&regs[reglast], startptr,
                REG_EXTENDED);
 
-    fprintf(stderr, "compile result nsubs=%ld\n", regs[reglast].re_nsub);
+    /* fprintf(stderr, "compile result nsubs=%ld\n", regs[reglast].re_nsub); */
     if (compresult  != 0) {
+	fprintf(stderr, "regcomp: failure to compile '%s'\n", startptr);
         return NULL;
     }
 
@@ -162,31 +163,35 @@ func_regexec (const char *func_name, unsigned int argc, char **argv)
         if (reg_result != 0) {
             return NULL;
         }
-	fprintf(stderr, "MATCHED: %d\n", nmatches);
+	/* fprintf(stderr, "MATCHED: %d\n", nmatches); */
 
 	/* guess that the result string can't be bigger than the source
 	 * which is not strictly true */
 	int result_size = strlen(source_string + nmatches + 1);
         result = gmk_alloc(result_size);
 
-	fprintf(stderr, "Result size guess: %d\n", result_size);
-	int pos = 0;
+	/* fprintf(stderr, "Result size guess: %d\n", result_size); */
+	int pos = -1;
 	int i;
         for (i=0; i < nmatches; i++) {
+          pos++;
           int len = pmatch[i].rm_eo - pmatch[i].rm_so;
 
 	  /* Check if the output string is large enough to add on the next match and realloc if not. */
 	  if (len + pos + 1  > result_size) {
              result_size *= 2;
              result = xrealloc (result, result_size);
-	     fprintf(stderr, "Result size realloc to: %d\n", result_size);
+	     /* fprintf(stderr, "Result size realloc to: %d\n", result_size); */
 	  }
           strncpy(result + pos, source_string + pmatch[i].rm_so, len);
 	  pos += len;
 	  *(result+pos) = ' ';
-          pos++;
 	}
-        result[pos] = '\0';
+	if (pos > 0) {
+            result[pos] = '\0';
+	} else {
+	    result[0] = '\0';
+	}
 
         return result;
     }
