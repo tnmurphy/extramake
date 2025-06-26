@@ -15,6 +15,12 @@ $(XTRA_OUTPUTDIR)/$1.o: $(XTRA_SOURCE)/$1.c
 XTRA_CLEANTARGETS:=$$(XTRA_CLEANTARGETS) \
     $(XTRA_OUTPUTDIR)/$1$(XTRA_EXT) $(XTRA_OUTPUTDIR)/$1.o 
 
+test::
+
+test::
+	valgrind --track-origins=yes make -f test_$1.mk
+
+
 endef
 
 define moduleplus
@@ -27,6 +33,9 @@ $(XTRA_OUTPUTDIR)/$2.o: $(XTRA_SOURCE)/$2.c
 
 XTRA_CLEANTARGETS:=$$(XTRA_CLEANTARGETS) \
     $(XTRA_OUTPUTDIR)/$2.o 
+
+test::
+	valgrind --track-origins=yes make -f test_$1.mk
 
 endef
 

@@ -22,6 +22,7 @@ that add functions for a wide variety of purposes.
 ## Functions offered in extramake ##
 
 * $(equals x,y) tests string equality. Returns empty if the 2 parameters don't match or the value if they do. 
+  * If both parametersa are empty it returns '1'
   * e.g. `FILENAME=file.$(if $(equals $(compression_level),0),tar,.tar.bz3)`
 * $(siphash24 text[,key]) returns a 16 character hash of the input text, an optional key can be used to make the whole thing cryptographic.
   * Also added a function $(hash) which is currently just the same as siphash24 so that one can ignore the algorithm. In future we a different algorithm could be used underneath $(hash) with improved properties.

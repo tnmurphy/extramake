@@ -45,7 +45,14 @@ GMK_EXPORT char *func_equals(const char *func_name, unsigned int argc,
   NOTUSED(argc);
 
   if (strcmp(argv[0], argv[1]) == 0) {
-    result = gmk_alloc(strlen(argv[0]) + 1);
+    int arglen = strlen(argv[0]);
+    if (arglen == 0) {
+        result = gmk_alloc(2);
+	result[0] = '1';
+	result[1] = '\0';
+	return result;
+    } 
+    result = gmk_alloc( arglen + 1 );
     /* If the allocation fails we will crash but that is presumably
        better than allowing a build to be incorrect.  An error message
        would be nicer. Nicest would be if GNU make gave us an error
