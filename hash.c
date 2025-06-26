@@ -95,5 +95,6 @@ hash_gmk_setup (const gmk_floc *flocp)
 {
     NOTUSED(flocp);
     gmk_add_function ("siphash24", func_siphash24, 1, 2, GMK_FUNC_DEFAULT);
+    gmk_add_function ("hash", func_siphash24, 1, 2, GMK_FUNC_DEFAULT);
     return 1;
 }

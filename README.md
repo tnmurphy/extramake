@@ -24,6 +24,7 @@ that add functions for a wide variety of purposes.
 * $(equals x,y) tests string equality. Returns empty if the 2 parameters don't match or the value if they do. 
   * e.g. `FILENAME=file.$(if $(equals $(compression_level),0),tar,.tar.bz3)`
 * $(siphash24 text[,key]) returns a 16 character hash of the input text, an optional key can be used to make the whole thing cryptographic.
+  * Also added a function $(hash) which is currently just the same as siphash24 so that one can ignore the algorithm. In future we a different algorithm could be used underneath $(hash) with improved properties.
 * $(strlen <string>) returns the number of characters in <string>
 * $(sum <number> <number> .... <number> )  finds the sum of a list of integers. Negative integers are allowed.  Any non-numeric characters will cause the empty string to be returned.
 * $(mul <n> <n> <n>) returns the result of multiplying a list of numbers.  Overflow can occur. The platform's "long long" is used.

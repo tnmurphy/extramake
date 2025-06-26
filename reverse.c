@@ -66,6 +66,8 @@ func_reverse (const char *func_name, unsigned int argc, char **argv)
 	}
 	c++;
     }
+    if (inspace) result_index--; /* We don't need a separator for the last item or if there's only one item  */
+
 
     if (result_index <= 0) {
 	    return NULL;
