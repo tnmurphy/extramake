@@ -9,6 +9,8 @@ $(eval $(call simpletest,gt_nothing,,$(gt ,)))
 $(eval $(call simpletest,lt_nothing,,$(lt ,)))
 $(eval $(call simpletest,gte_nothing,,$(gte ,)))
 $(eval $(call simpletest,lte_nothing,,$(lte ,)))
+$(eval $(call simpletest,lte_whitespace1,,$(lte  ,  )))
+$(eval $(call simpletest,lte_whitespace2,,$(lte ,  )))
 
 $(eval $(call simpletest,gt_1_0,1,$(gt 1,0)))
 $(eval $(call simpletest,gt_1_0_spaces,1,$(gt 1  ,  0  )))

@@ -49,23 +49,49 @@ GMK_EXPORT char *func_comp(const char *func_name, unsigned int argc,
   long long left, right, answer = 0;
 
   char *endptr = NULL;
+  char *startptr = NULL;
 
   NOTUSED(argc);
 
-  left = strtoll(argv[0], &endptr, 10);
-  /* Non numeric characters are not allowed.
-   * signal this by returning the empty string
-   * if we spot them */
-  if (*endptr != '\0' || endptr == argv[0]) {
+  startptr = argv[0];
+  while (*startptr == ' ' || *startptr == '\t') {
+    startptr++;
+  }
+  left = strtoll(startptr, &endptr, 10);
+  if (endptr - startptr < 1) {
+    /* it's really an error to compare
+     * empty strings numerically */
     return NULL;
   }
+  /* Non numeric characters are not allowed.
+   * signal this by returning the empty string
+   * if we spot them. Whitespace IS allowed.
+   */
+  while (*endptr != '\0') {
+    if (*endptr != ' ' && *endptr != '\t') {
+      return NULL;
+    }
+    endptr++;
+  }
 
-  right = strtoll(argv[1], &endptr, 10);
+  startptr = argv[1];
+  while (*startptr == ' ' || *startptr == '\t') {
+    startptr++;
+  }
+  right = strtoll(startptr, &endptr, 10);
+  if (endptr - startptr < 1) {
+    /* it's really an error to compare
+     * empty strings numerically */
+    return NULL;
+  }
   /* Non numeric characters are not allowed.
    * signal this by returning the empty string
    * if we spot them */
-  if (*endptr != '\0' || endptr == argv[1]) {
-    return NULL;
+  while (*endptr != '\0') {
+    if (*endptr != ' ' && *endptr != '\t') {
+      return NULL;
+    }
+    endptr++;
   }
 
   if (func_name[2] == '\0') {
