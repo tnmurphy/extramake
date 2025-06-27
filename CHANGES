@@ -1,0 +1,108 @@
+https://github.com/tnmurphy/extramake
+
+
+# extramake is a C function library for GNU Make.
+
+
+
+
+## 27 Jun 2025 - <tnmurphy@gmail.com>
+
+New Features and Corrections
+-----------------------------------------
+$(reverse ab cd ef)  = ef cd ab
+
+This is something the GNU Make Standard Library already does but....well this one might end up being a bit faster possibly.
+
+I've also partially taken a hint from David Boyce a while ago and added a $(hash) function as an alternate name for $(siphash24). This means we could later decide to change the underlying hashing method without breaking anything.
+
+
+Unit Tests
+--------------
+The main change has been the addition of a way to create unit tests for the functions. This is somewhat limited now but still very useful. It requires that valgrind is installed.
+
+For each c file containing a function or group of functions there is a test_NAME.mk file where NAME would be the name of the C file without the extension. Example for reverse here is test_reverse.mk:
+
+include xtra.mk
+-load $(XTRA_OUTPUTDIR)/reverse$(XTRA_EXT)
+include simple_test.mk
+
+# tests
+$(eval $(call simpletest,reverse_letters,d c b a,$(reverse a b c d)))
+$(eval $(call simpletest,reverse_tokens_longer_than_one,ef cd ab,$(reverse ab cd ef)))
+
+There's a macro (simpletest) that generates the test as a rule.  The actual execution of the function happens while parsing test_reverse.mk  but the checking of the result happens in a shell statement when the rule is executed.  This allows failures to be treated like 
+
+As a direct result I've fixed a number of things that I perceive as bugs:
+
+     $(equals ,) returned the empty string which suggests that an empty string is not equal to an empty string. That's bad! :-) 
+    The numeric comparison functions gt lt lte gte all returned false if there was any whitespace wrapping either argument. Now they tolerate it and gte and lte properly return the empty string if you try to compare an empty string with anything else.
+
+
+The test mechanism isn't good with side effects yet - no setup/teardown for tests.  The test for mkdir is weak because it really needs a random temporary directory name and for that directory to be deleted afterwards.
+
+
+To test an individual function you can do this:
+
+    make -f reverse.mk test
+
+This will compile the code and run the tests as well. It'll use valgrind to check that no memory errors have occurred.
+
+to run all the tests just 
+    make test
+
+## 9 Jun 2025 - <tnmurphy@gmail.com>
+### REGEX - Regular Expression Matching
+
+-load regex.mk
+HANDLE:=$(regcomp, String(.*))
+MATCH1:=$(regexec $(HANDLE),String123)
+MATCH2:=$(regexec $(HANDLE),String)
+
+$(info MATCH1=$(MATCH1))
+$(info MATCH2=$(MATCH2))
+
+
+The result would be
+
+MATCH1=String123 123
+MATCH2=String
+These functions use the glibc regcomp and regexec functions to do regexp matching so they will build wherever you have glibc.  I wondered about finding some more generic library where I could include a copy like with siphash24 but so far I haven't found one and I thought this wasn't such a terrible compromise.
+
+PROBLEMS:
+There's no way to set compile flags or exec flags yet - that can be fixed with a bit of dull work.
+There's some debugging code but no good error messages for regex compilation at least. 
+
+The big problem is that there's a limit to the number of regexps one can create and I really don't want to implement some kind of "regexp free" function to release the resources used by the regexp.
+I could compile and execute the regexp in one function and deal with it that way ......but it does seem very inefficient.  At the moment I just have an array of regex_t structures and regcomp returns
+an index into it. That's pretty ugly but it seems relatively efficient.  I'd love to hear thoughts on this whole issue.
+
+
+### MKDIR - Directory Creation
+
+$(mkdir  /makes/all/paths/upto/and/includingthe/last)
+
+This is like mkdir -p at the commandline. The idea is for one to be able to make directories before any rules get executed. WHY? Ha well. Directories are a nuisance because they get updated when you add a file to them so they cannot be used to trigger a rule because they change a lot even when it doesn't matter to you. So you can use order-only rules etc but sometimes it's just neater to make the output directory as part of a macro. 
+
+
+
+## 9 Nov 2015 - <tnmurphy@gmail.com>
+### Added functions: 
+
+$(sum <number> <number> .... <number> )
+   finds the sum of a list of integers. Negative integers are allowed. Any non-numeric characters will cause the empty string to be returned.
+
+$(mul <n> <n> <n>)
+  returns the result of multiplying a list of numbers. Overflow can occur. The platform's "long long" is used. Negative numbers are ok.
+
+$(lt x,y)
+  returns 1 if x < y for integers x and y, empty string otherwise.
+
+$(lte x,y)
+  returns 1 if x <= y for integers x and y, empty string otherwise.
+
+$(gt x,y)
+  returns 1 if x >= y for integers x and y, empty string otherwise.
+
+$(gte x,y)
+  returns 1 if x >= y for integers x and y, empty string otherwise.

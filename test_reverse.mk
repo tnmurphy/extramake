@@ -1,4 +1,6 @@
--load reverse.so
+include xtra.mk
+
+-load $(XTRA_OUTPUTDIR)/reverse$(XTRA_EXT)
 
 include simple_test.mk
 
