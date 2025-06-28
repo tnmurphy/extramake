@@ -72,6 +72,53 @@ GMK_EXPORT int plugin_is_GPL_compatible = 1;
 regex_t regs[MAX_NREGEXPS];
 int reglast = -1;
 
+/* turn a list of flags in a string into an integer */
+int get_compile_flags(char *flag_str) {
+
+  int flags = REG_EXTENDED; /* always extended - to keep life simple */
+
+  /*
+         Use POSIX Extended Regular Expression syntax when
+         interpreting regex.  If not set, POSIX Basic Regular
+         Expression syntax is used.
+
+         For the time being it's an enforced default to make things
+         simple.
+
+  if (strcasestr(flag_str, "REG_EXTENDED") != NULL) {
+      flags |= REG_EXTENDED;
+  }
+  */
+
+  /*
+   *    Do not differentiate case.  Subsequent regexec() searches using this
+   * pattern buffer will be case insensitive.
+   */
+  if (strcasestr(flag_str, "REG_ICASE") != NULL) {
+    flags |= REG_ICASE;
+  }
+
+  /*
+    Report only overall success.  regexec() will use only pmatch for
+    REG_STARTEND, ignoring nmatch.
+    
+    This is problematic for make because there's no match to return and one may
+    ask what the great purpose is. The value would be if the match was absolutely
+    huge.
+   
+    if (strcasestr(flag_str, "REG_NOSUB") != NULL) { flags |= REG_NOSUB; }
+   */
+
+  /*
+   *    Match-any-character operators don't match a newline.
+   */
+  if (strcasestr(flag_str, "REG_NEWLINE") != NULL) {
+    flags |= REG_NEWLINE;
+  }
+
+  return flags;
+}
+
 GMK_EXPORT char *func_regcomp(const char *func_name, unsigned int argc,
                               char **argv) {
   char *result = NULL;
@@ -81,7 +128,11 @@ GMK_EXPORT char *func_regcomp(const char *func_name, unsigned int argc,
   int compresult = 0;
 
   NOTUSED(func_name);
-  NOTUSED(argc);
+  int flags = REG_EXTENDED;
+
+  if (argc == 2) {
+    flags = get_compile_flags(argv[1]);
+  }
 
   while (*startptr == ' ' || *startptr == '\t') {
     startptr++;
@@ -95,7 +146,7 @@ GMK_EXPORT char *func_regcomp(const char *func_name, unsigned int argc,
   regs[reglast].re_nsub = 0;
   handle = reglast;
 
-  compresult = regcomp(&regs[reglast], startptr, REG_EXTENDED);
+  compresult = regcomp(&regs[reglast], startptr, flags);
 
   /* fprintf(stderr, "compile result nsubs=%ld\n", regs[reglast].re_nsub); */
   if (compresult != 0) {
@@ -113,7 +164,7 @@ GMK_EXPORT char *func_regcomp(const char *func_name, unsigned int argc,
 GMK_EXPORT char *func_regexec(const char *func_name, unsigned int argc,
                               char **argv) {
   char *result = NULL;
-  long handle = -1;
+  long handle = -1L;
 
   char *startptr = argv[0];
   char *source_string = NULL;
@@ -151,7 +202,15 @@ GMK_EXPORT char *func_regexec(const char *func_name, unsigned int argc,
   {
 
     int nmatches = regs[reglast].re_nsub + 1;
+
     regmatch_t pmatch[nmatches];
+
+    /* initialise the results in case there's a REG_NOSUB
+     * flag on the compiled regexp and we don't
+     * get the matches we expect */
+    for (int i = 0; i < nmatches; i++) {
+      pmatch[i].rm_so = -1;
+    }
 
     reg_result = regexec(&regs[reglast], source_string, nmatches, pmatch, 0);
 
@@ -172,6 +231,11 @@ GMK_EXPORT char *func_regexec(const char *func_name, unsigned int argc,
       pos++;
       int len = pmatch[i].rm_eo - pmatch[i].rm_so;
 
+      /* REG_NOSUB could prevent the full set of matches: */
+      if (pmatch[i].rm_so < 0) {
+        break;
+      }
+
       /* Check if the output string is large enough to add on the next match and
        * realloc if not. */
       if (len + pos + 1 > result_size) {
@@ -179,6 +243,9 @@ GMK_EXPORT char *func_regexec(const char *func_name, unsigned int argc,
         result = xrealloc(result, result_size);
         /* fprintf(stderr, "Result size realloc to: %d\n", result_size); */
       }
+
+      fprintf(stderr, " pos: %d source_string: '%s' start  %d  len %d\n", pos,
+              source_string, pmatch[i].rm_so, len);
       strncpy(result + pos, source_string + pmatch[i].rm_so, len);
       pos += len;
       *(result + pos) = ' ';
@@ -196,7 +263,7 @@ GMK_EXPORT char *func_regexec(const char *func_name, unsigned int argc,
 GMK_EXPORT
 int regex_gmk_setup(const gmk_floc *flocp) {
   NOTUSED(flocp);
-  gmk_add_function("regcomp", func_regcomp, 1, 1, GMK_FUNC_DEFAULT);
+  gmk_add_function("regcomp", func_regcomp, 1, 2, GMK_FUNC_DEFAULT);
   gmk_add_function("regexec", func_regexec, 2, 2, GMK_FUNC_DEFAULT);
   return 1;
 }
