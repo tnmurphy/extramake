@@ -37,6 +37,8 @@ that add functions for a wide variety of purposes.
 * $(mkdir /path/to/dir)  makes all directories up to and including "dir". Returns as much of the path as could be made or empty if no path could be made e.g. if the root doesn't exist.
 * $(reverse <list>) returns the list in reverse order with single space separator. 
   * e.g. $(reverse ab cd ef) returns ef cd ab
+* $(time <format>) - returns the current time in strftime format which defaults to  +%Y-%m-%dT%H:%M:%SZ  if <format> is + then a dewfault format is used.
+* $(sleep <seconds>) - sleeps for an integer number of seconds. Returns nothing.
 
 
 ## How to use the modules ##
