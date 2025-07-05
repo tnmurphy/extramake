@@ -7,3 +7,4 @@ XTRA_MAKEHEADERS ?= ./include/gmake421
 XTRA_OUTPUTDIR ?= .
 XTRA_CFLAGS ?= -fPIC -O2 -g -Wall -Wextra -Werror
 XTRA_SOURCE ?= .
+XTRA_INSTALLDIR ?= /usr/lib/extramake/$(file < version)
