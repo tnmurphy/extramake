@@ -244,8 +244,6 @@ GMK_EXPORT char *func_regexec(const char *func_name, unsigned int argc,
         /* fprintf(stderr, "Result size realloc to: %d\n", result_size); */
       }
 
-      fprintf(stderr, " pos: %d source_string: '%s' start  %d  len %d\n", pos,
-              source_string, pmatch[i].rm_so, len);
       strncpy(result + pos, source_string + pmatch[i].rm_so, len);
       pos += len;
       *(result + pos) = ' ';
