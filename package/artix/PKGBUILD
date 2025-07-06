@@ -2,7 +2,7 @@
 # Contributor: David Boyce <david.boyce@broadcom.com>
 pkgname=extramake
 pkgbase=extramake
-pkgver=r26.35fc32c
+pkgver=r27.c6f43cb
 pkgrel=1
 pkgdesc="A library of useful functions for GNU Make that are written in C"
 url="https://github.com/tnmurphy/extramake"
