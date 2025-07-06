@@ -1,0 +1,13 @@
+Source: extramake
+Maintainer: Timothy Norman Murphy <tnmurphy@gmail.com>
+Build-Depends: make, build-essential
+Standards-Version: 0.1-1
+Section: utils
+
+Package: extramake
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: make
+Description: Extramake is a library of C functions that can be loaded into GNU Make to extend it with new abilities via Make's 'load' directive. it includes functions such as: equals, hash, strlen, sum, mul, lt, lte, gt, gte, mkdir, reverse, time and sleep
+
