@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+
+# build and install xtramake into the packaging directory
+pkgname:=extramake
+pkgdir:=debian/extramake
+pkgver:=$(file < version)
+_licensedir:=$(pkgdir)/usr/share/doc/$(pkgname)
+_installbase=$(pkgdir)/usr/lib/$(pkgname)
+_installdir=$(_installbase)/$(pkgver)
+
+ifeq ($(pkgver),)
+$(error "failed to get package version.")
+else
+$(info pkgver=$(pkgver))
+endif
+
+.ONESHELL:
+
+clean::
+	echo $$PWD;
+	rm -rf $(_installbase) $(_licensedir) || true; 
+	make clean; 
+
+binary-arch::
+
+binary-indep::
+
+binary::
+	mkdir -p "$(_licensedir)"; 
+	cp -vf COPYING "$(_licensedir)/copyright"; 
+	make XTRA_INSTALLDIR="$(_installdir)" install; 
+	rm "$(_installbase)/latest" 2>/dev/null || true; 
+	ln -s "$(pkgver)" "$(_installbase)/latest";
+
+build::
+	make
+
+build-arch::
+
+build-indep::
+
+# vim:set ts=2 sw=2 et:
+
+
