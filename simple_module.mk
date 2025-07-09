@@ -1,10 +1,10 @@
 include xtra.mk
 
+#-load $(XTRA_OUTPUTDIR)/$1$(XTRA_EXT)
+
 define simplemodule
 
 all:: $(XTRA_OUTPUTDIR)/$1$(XTRA_EXT)
-
--load $(XTRA_OUTPUTDIR)/$1$(XTRA_EXT)
 
 $(XTRA_OUTPUTDIR)/$1$(XTRA_EXT): $(XTRA_OUTPUTDIR)/$1.o
 	gcc -shared -o $$@ $$^

@@ -2,7 +2,7 @@
 .PHONY: all
 all::
 
-.PHONY: clean test valgrind do_tests
+.PHONY: clean test valgrind do_tests xtra_clean
 clean: xtra_clean
 
 # requires valgrind to be installed.
